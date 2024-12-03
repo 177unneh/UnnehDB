@@ -41,3 +41,5 @@ Handles saving files associated with documents, including reading file buffers a
 - **Indexes:** Automatically updated when documents are added or modified.
 - **Sub-Collections:** Facilitates hierarchical data organization.
 
+## WARNING
+ This was created as to test my skills may be not perfomance best but for my image app works great!
