@@ -45,27 +45,31 @@ class Database extends EventEmitter {
             this.data = { collections: {}, indexes: {}, files: {} };
             this.saveDB();
         } else {
-            const workerPath = path.join(__dirname, 'dbWorker.js'); // Updated path
-            const worker = new Worker(workerPath, { workerData: { file: this.DB_FILE } });
-            worker.on('message', (data) => {
-                this.data = data;
-                console.log('Database initialized.');
-            });
-            worker.on('error', (err) => { // Added error handling
-                console.error('Worker error:', err);
-            });
+            this.data = JSON.parse(fs.readFileSync(this.DB_FILE));
+            // const workerPath = path.join(__dirname, 'dbWorker.js'); // Updated path
+            // const worker = new Worker(workerPath, { workerData: { file: this.DB_FILE } });
+            // worker.on('message', (data) => {
+            //     this.data = data;
+            //     console.log('Database initialized.');
+            // });
+            // worker.on('error', (err) => { // Added error handling
+            //     console.error('Worker error:', err);
+            // });
         }
+        console.log('Database initialized.');
     }
     //function to save it
     saveDB() {
-        const workerPath = path.join(__dirname, 'dbWorker.js'); // Updated path
-        const worker = new Worker(workerPath, { workerData: { file: this.DB_FILE, data: this.data } });
-        worker.on('message', () => {
-            console.log('Database saved to disk.');
-        });
-        worker.on('error', (err) => { // Added error handling
-            console.error('Worker error:', err);
-        });
+        fs.writeFileSync(this.DB_FILE, JSON.stringify(this.data, null, 2));
+        console.log('Database saved to disk.');
+        // const workerPath = path.join(__dirname, 'dbWorker.js'); // Updated path
+        // const worker = new Worker(workerPath, { workerData: { file: this.DB_FILE, data: this.data } });
+        // worker.on('message', () => {
+        //     console.log('Database saved to disk.');
+        // });
+        // worker.on('error', (err) => { // Added error handling
+        //     console.error('Worker error:', err);
+        // });
     }
 
     startAutoSave() {
