@@ -146,12 +146,12 @@ class Collection {
         if (data.collections && data.indexes) {
             // For main collections
             this.data = data.collections[name];
-            this.indexes = data.indexes[name];
+            // this.indexes = data.indexes[name];
             this.files = data.files;
         } else {
             // For sub-collections
             this.data = data[name] || {};
-            this.indexes = {};
+            // this.indexes = {};
             this.files = {};
         }
         this.db = db;
@@ -171,7 +171,7 @@ class Collection {
         const timestamp = new Date().toISOString();
 
         this.data[documentId] = { ...documentData, createdAt: timestamp, collections: {} };
-        this.updateIndexes(documentId, documentData);
+        // this.updateIndexes(documentId, documentData);
         // this.db.saveDB();
         console.log(`Added document ${documentId} to collection '${this.name}'.`);
         return documentId;
@@ -203,7 +203,7 @@ class Collection {
         }
 
         Object.assign(this.data[documentId], updates);
-        this.updateIndexes(documentId, this.data[documentId]);
+        // this.updateIndexes(documentId, this.data[documentId]);
         this.db.saveDB();
         console.log(`Updated document ${documentId} in collection '${this.name}'.`);
         return true;
@@ -216,7 +216,7 @@ class Collection {
         }
 
         delete this.data[documentId];
-        this.removeFromIndexes(documentId);
+        // this.removeFromIndexes(documentId);
         this.db.saveDB();
         console.log(`Deleted document ${documentId} from collection '${this.name}'.`);
         return true;
@@ -272,24 +272,7 @@ class Collection {
         return true;
     }
 
-    updateIndexes(documentId, documentData) {
-        for (const [key, value] of Object.entries(documentData)) {
-            if (!this.indexes[key]) {
-                this.indexes[key] = {};
-            }
-            this.indexes[key][value] = documentId;
-        }
-    }
-
-    removeFromIndexes(documentId) {
-        for (const [key, indexMap] of Object.entries(this.indexes)) {
-            for (const [value, id] of Object.entries(indexMap)) {
-                if (id === documentId) {
-                    delete indexMap[value];
-                }
-            }
-        }
-    }
+  
 }
 
 class SubCollection extends Collection {
