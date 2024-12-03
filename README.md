@@ -1,6 +1,4 @@
-Here is the documentation for your `README.md` based on the HTML file you provided:
 
----
 
 # unnehdb.js Documentation
 
