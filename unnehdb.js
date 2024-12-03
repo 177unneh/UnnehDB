@@ -4,6 +4,7 @@ const crypto = require("crypto");
 const { v4: uuidv4 } = require("uuid");
 const EventEmitter = require('events');
 const { warn } = require("console");
+const { Worker } = require('worker_threads');
 
 // const DB_FILE = path.join(__dirname, "database.json");
 let UPLOAD_DIR = path.join(__dirname, "uploads"); // Default upload directory
@@ -44,14 +45,27 @@ class Database extends EventEmitter {
             this.data = { collections: {}, indexes: {}, files: {} };
             this.saveDB();
         } else {
-            this.data = JSON.parse(fs.readFileSync(this.DB_FILE));
+            const workerPath = path.join(__dirname, 'dbWorker.js'); // Updated path
+            const worker = new Worker(workerPath, { workerData: { file: this.DB_FILE } });
+            worker.on('message', (data) => {
+                this.data = data;
+                console.log('Database initialized.');
+            });
+            worker.on('error', (err) => { // Added error handling
+                console.error('Worker error:', err);
+            });
         }
-        console.log('Database initialized.');
     }
     //function to save it
     saveDB() {
-        fs.writeFileSync(this.DB_FILE, JSON.stringify(this.data, null, 2));
-        console.log('Database saved to disk.');
+        const workerPath = path.join(__dirname, 'dbWorker.js'); // Updated path
+        const worker = new Worker(workerPath, { workerData: { file: this.DB_FILE, data: this.data } });
+        worker.on('message', () => {
+            console.log('Database saved to disk.');
+        });
+        worker.on('error', (err) => { // Added error handling
+            console.error('Worker error:', err);
+        });
     }
 
     startAutoSave() {
