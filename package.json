@@ -1,6 +1,6 @@
 {
   "name": "unnehdb",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "This is a simple in-memory database implementation written in JavaScript. It supports basic operations like creating collections, adding documents, indexing, and file storage.",
   "main": "unnehdb.js",
   "scripts": {
