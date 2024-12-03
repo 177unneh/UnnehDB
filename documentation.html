@@ -281,7 +281,60 @@ users.saveFile(documentId, 'profilePicture', fileBuffer, 'profile.jpg');
       });
     });
   </script>
- 
+  <script>
+     function onScroll() {
+  let current = '';
+  let minDistance = Infinity;
+
+  sections.forEach(section => {
+    const sectionTop = section.getBoundingClientRect().top;
+    const distance = Math.abs(sectionTop - window.innerHeight / 2);
+
+    if (distance < minDistance) {
+      minDistance = distance;
+      current = section.getAttribute('id');
+    }
+  });
+
+  navLinks.forEach(link => {
+    link.classList.remove('active');
+    if (link.getAttribute('href') === `#${current}`) {
+      link.classList.add('active');
+    }
+  });
+
+  sections.forEach(section => {
+    section.classList.remove('highlight');
+    if (section.getAttribute('id') === current) {
+      section.classList.add('highlight');
+    }
+  });
+}
+
+// Dodanie obsługi kliknięcia
+navLinks.forEach(link => {
+  link.addEventListener('click', (event) => {
+    event.preventDefault();
+
+    // Usuń wszystkie aktywne klasy
+    navLinks.forEach(nav => nav.classList.remove('active'));
+
+    // Podświetl kliknięty link
+    link.classList.add('active');
+
+    // Przewiń do wybranej sekcji
+    const sectionId = link.getAttribute('href').slice(1);
+    const section = document.getElementById(sectionId);
+    if (section) {
+      section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  });
+});
+
+// Dodanie obsługi scrollowania
+window.addEventListener('scroll', onScroll);
+
+</script>
 </body>
 
 </html>
