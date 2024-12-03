@@ -41,11 +41,16 @@ class Database extends EventEmitter {
     }
     // init the database create file!
     initDB() {
+        console.log('Waiting for db.');
+
         if (!fs.existsSync(this.DB_FILE)) {
+            console.log("!fileexist");
             this.data = { collections: {}, indexes: {}, files: {} };
             this.saveDB();
         } else {
             this.data = JSON.parse(fs.readFileSync(this.DB_FILE));
+            console.log("fileexist");
+
             // const workerPath = path.join(__dirname, 'dbWorker.js'); // Updated path
             // const worker = new Worker(workerPath, { workerData: { file: this.DB_FILE } });
             // worker.on('message', (data) => {
