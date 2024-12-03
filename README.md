@@ -1,287 +1,43 @@
-<!DOCTYPE html>
-<html lang="en">
 
-<head>
-  <meta charset="UTF-8">
-  <title>unnehdb.js Documentation</title>
-  <style>
-    body {
-      font-family: 'Segoe UI', Arial, sans-serif;
-      line-height: 1.6;
-      margin: 0;
-      padding: 0;
-      color: #333;
-    }
+# unnehdb.js Documentation
 
-    header {
-      background-color: #4CAF50;
-      color: white;
-      padding: 20px;
-      text-align: center;
-    }
+## Overview
+A simple in-memory database implementation in JavaScript supporting operations like creating collections, adding documents, indexing, and file storage.
 
-    nav {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 250px;
-      height: 100%;
-      background-color: #333;
-      color: white;
-      padding: 10px 15px;
-      overflow-y: auto;
-    }
+### Database
+- Manages initialization, saving, auto-saving, and collection management.
 
-    nav ul {
-      list-style: none;
-      padding: 0;
-    }
+### Collection
+- Handles operations on individual collections.
 
-    nav ul li {
-      margin-bottom: 10px;
-    }
+### Document
+- Represents data stored in JSON format.
 
-    nav ul li a {
-      color: #fff;
-      text-decoration: none;
-      font-size: 14px;
-      display: block;
-      padding: 10px;
-      border-radius: 4px;
-      transition: background 0.3s;
-    }
+### SubCollection
+- Manages nested collections within documents.
 
-    nav ul li a:hover {
-      background-color: #575757;
-    }
+## Initializing the Database
+Initializes the database with a specified file name and auto-save interval.
 
-    main {
-      margin-left: 270px;
-      padding: 20px;
-    }
+## Save Manually
+Allows manual saving of the database outside the auto-save interval.
 
-    h1,
-    h2,
-    h3 {
-      color: #4CAF50;
-    }
+## Working with Collections
+- **Creating or Accessing a Collection:** Initializes or retrieves a collection.
+- **Adding a Document:** Inserts a new document into a collection.
+- **Retrieving a Document:** Fetches a document by its unique ID.
 
-    code {
-      background-color: #f4f4f4;
-      padding: 2px 4px;
-      border-radius: 4px;
-    }
+## Pagination
+Implements data pagination by specifying the page number and the number of items per page.
 
-    pre {
-      background-color: #f9f9f9;
-      border: 1px solid #ddd;
-      border-radius: 4px;
-      padding: 10px;
-      position: relative;
-    }
+## Working with Sub-Collections
+- **Creating or Accessing a Sub-Collection:** Initializes or retrieves a nested collection within a document.
 
-    pre code {
-      display: block;
-      overflow-x: auto;
-    }
+## File Storage
+Handles saving files associated with documents, including reading file buffers and specifying file names.
 
-    button.copy-btn {
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      background-color: #4CAF50;
-      color: white;
-      border: none;
-      padding: 5px 10px;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 12px;
-    }
+## Shortcuts and Notes
+- **Auto-Save:** Automatically saves the database at specified intervals.
+- **Indexes:** Automatically updated when documents are added or modified.
+- **Sub-Collections:** Facilitates hierarchical data organization.
 
-    button.copy-btn:hover {
-      background-color: #45a049;
-    }
-
-    ul {
-      list-style-type: disc;
-      margin-left: 20px;
-    }
-
-    footer {
-      margin-top: 40px;
-      text-align: center;
-      padding: 10px 0;
-      background-color: #f4f4f4;
-    }
-
-    section {
-      margin-bottom: 40px;
-    }
-    section.highlight {
-      outline: 2px solid #007BFF;
-      outline-offset: 5px;
-      border-radius: 4px;
-    }
-  </style>
-</head>
-
-<body>
-
-  <header>
-    <h1>unnehdb.js Documentation</h1>
-  </header>
-
-  <nav>
-    <ul>
-      <li><a href="#overview">Overview</a></li>
-      <li><a href="#initializing">Initializing the Database</a></li>
-      <li><a href="#collections">Working with Collections</a></li>
-      <li><a href="#subcollections">Working with Sub-Collections</a></li>
-      <li><a href="#file-storage">File Storage</a></li>
-      <li><a href="#pagination">Pagination</a></li>
-      <li><a href="#shortcuts">Shortcuts and Notes</a></li>
-    </ul>
-  </nav>
-
-  <main>
-    <section id="overview">
-      <h2>Overview</h2>
-      <p>This is a simple in-memory database implementation written in JavaScript. It supports basic operations like
-        creating collections, adding documents, indexing, and file storage.</p>
-      <ul>
-        <li><strong>Database</strong>: Manages database initialization, saving, auto-saving, and collection management
-          (like a main disk).</li>
-        <li><strong>Collection</strong>: Handles operations on individual collections (like folders).</li>
-        <li><strong>Document</strong>: Represents data stored in JSON format (like files in folders).</li>
-        <li><strong>SubCollection</strong>: Handles nested collections within documents (like subfolders).</li>
-      </ul>
-    </section>
-
-    <section id="initializing">
-      <h2>Initializing the Database</h2>
-      <pre>
-      <code class="language-javascript">
-const db = new Database('unnehdb', 600);
-      </code>
-      <button class="copy-btn">Copy</button>
-    </pre>
-      <p>
-        The first argument is the file name where the database will be saved. The second argument is the auto-save
-        interval (in milliseconds). You can use a third argument to specify a custom file name.
-      </p>
-    </section>
-
-    <section id="initializing">
-      <h2>Save manually</h2>
-      <pre>
-      <code class="language-javascript">
-    const db = new Database('unnehdb', 600);
-    db.save();
-      </code>
-      <button class="copy-btn">Copy</button>
-    </pre>
-      <p>
-        Normaly the database is saved automatically at the interval specified during initialization. But you can also save manually.
-        <!-- interval (in milliseconds). You can use a third argument to specify a custom file name. -->
-      </p>
-    </section>
-
-    <section id="collections">
-      <h2>Working with Collections</h2>
-
-      <h3>Creating or Accessing a Collection</h3>
-      <pre>
-      <code class="language-javascript">
-const users = db.collection('users');
-      </code>
-      <button class="copy-btn">Copy</button>
-    </pre>
-
-      <h3>Adding a Document</h3>
-      <pre>
-      <code class="language-javascript">
-const userId = users.add({ name: 'John Doe', email: 'john@example.com' });
-      </code>
-      <button class="copy-btn">Copy</button>
-    
-    </pre>
-    <p>
-      The add method returns the unique ID of the document. The argument is the document data in JSON
-      <!-- interval (in milliseconds). You can use a third argument to specify a custom file name. -->
-    </p>
-      <h3>Retrieving a Document</h3>
-      <pre>
-      <code class="language-javascript">
-const user = users.getDocumentById(userId);
-      </code>
-      <button class="copy-btn">Copy</button>
-    </pre>
-
-    
-    </section>
-
-    <section id="pagination">
-      <h2>Pagination</h2>
-      <pre>
-      <code class="language-javascript">
-const page = users.paginate(0, 10);
-      </code>
-      <button class="copy-btn">Copy</button>
-    </pre>
-    </section>
-    <section id="subcollections">
-      <h2>Working with Sub-Collections</h2>
-      <h3>Creating or Accessing a Sub-Collection</h3>
-      <pre>
-      <code class="language-javascript">
-const orders = users.collection(userId, 'orders');
-      </code>
-      <button class="copy-btn">Copy</button>
-    </pre>
-    </section>
-    
-
-    <section id="file-storage">
-      <h2>File Storage</h2>
-      <h3>Saving a File</h3>
-      <pre>
-      <code class="language-javascript">
-const fileBuffer = fs.readFileSync('path/to/file.jpg');
-users.saveFile(documentId, 'profilePicture', fileBuffer, 'profile.jpg');
-      </code>
-      <button class="copy-btn">Copy</button>
-    </pre>
-    <p>
-      1. The first argument is the document ID. 2. The second argument is the key in document to the file. 3. The third argument is the file buffer. 4. The fourth argument is the file name.
-    </p>
-    </section>
-
-   
-
-    <section id="shortcuts">
-      <h2>Shortcuts and Notes</h2>
-      <ul>
-        <li><strong>Auto-Save</strong>: Auto-saves at the interval specified during initialization.</li>
-        <li><strong>Indexes</strong>: Automatically updated when documents are added or updated.</li>
-        <li><strong>Sub-Collections</strong>: Useful for hierarchical data organization.</li>
-      </ul>
-    </section>
-  </main>
-
-  <footer>
-    <p>© 2024 unnehdb.js - 177unneh</p>
-  </footer>
-
-  <script>
-    document.querySelectorAll('.copy-btn').forEach(button => {
-      button.addEventListener('click', () => {
-        const codeBlock = button.previousElementSibling.textContent;
-        navigator.clipboard.writeText(codeBlock);
-        alert('Code copied to clipboard!');
-      });
-    });
-  </script>
- 
-</body>
-
-</html>
