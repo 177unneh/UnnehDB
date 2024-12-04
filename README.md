@@ -95,14 +95,14 @@ The `update` method updates a document. It wont overwrite data not enter. For ex
 To retrieve a document by its ID:
 
 ```javascript
-const user = users.getDocumentByIndex(userId);
+const user = users.getDocumentById(userId);
 ```
 
 ---
 To retrieve a document by its it Index:
 
 ```javascript
-const user = users.getDocumentById(userId);
+const user = users.getDocumentByIndex(userId);
 ```
 
 ---
