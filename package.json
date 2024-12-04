@@ -17,10 +17,7 @@
   "license": "GPL",
   "dependencies": {
     "console": "^0.7.2",
-    "crypto": "^1.0.1",
     "events": "^3.3.0",
-    "fs": "^0.0.1-security",
-    "path": "^0.12.7",
     "uuid": "^11.0.3"
   }
 }

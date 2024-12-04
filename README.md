@@ -53,7 +53,6 @@ const db = new Database('unnehdb');
 Normally, the database is saved automatically based on the specified interval, but you can also save it manually:
 
 ```javascript
-const db = new Database('unnehdb',6000);
 db.save();
 ```
 
@@ -78,6 +77,18 @@ const userId = users.add({ name: 'John Doe', email: 'john@example.com' });
 ```
 
 The `add` method returns a unique ID for the document, and the argument is the document data in JSON format.
+
+### Update a Document
+
+To update a document to a collection:
+
+```javascript
+  collection.update("documentid", { aaa: "hello" });
+
+```
+
+The `update` method updates a document. It wont overwrite data not enter. For example if you have `{Hello:"hi",How:"nwm"}` and you only set update to Hello. Only hello will update and how will be left as it is
+
 
 ### Retrieving a Document
 
@@ -105,6 +116,12 @@ const page = users.paginate(0, 10);
 ```
 
 This retrieves a specific page of results, with the first argument being the page number and the second argument being the number of items per page.
+
+```javascript
+const AllDocuments = Collection.GetAllDocuments(); //Get ALL documents with in colleciton
+const AllCollections = db.GetAllcollections(); //Get ALL colections in db
+```
+You can get all documents or collection like in exmaple above
 
 ---
 ### Remove documents

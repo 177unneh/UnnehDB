@@ -6,6 +6,7 @@ const EventEmitter = require('events');
 const { warn } = require("console");
 const { Worker, isMainThread, parentPort, workerData } = require('worker_threads');
 const { BSON, EJSON } = require('bson');
+const { exit } = require("process");
 
 // const DB_FILE = path.join(__dirname, "database.unnehDB");
 let UPLOAD_DIR = path.join(__dirname, "uploads"); // Default upload directory
@@ -87,6 +88,7 @@ class Database extends EventEmitter {
     }
 
     handleProcessExit() {
+     
         const saveAndExit = () => {
             this.saveDB();
             console.log('Process exiting, database saved.');
@@ -97,6 +99,13 @@ class Database extends EventEmitter {
             this.saveDB();
             console.log('Process exiting, database saved.');
         });
+
+        process.on('SIGHUP', function() {
+            console.log('About to exit');
+            this.saveDB();
+            console.log('Process exiting, database saved.');
+            process.exit();
+          });
 
         process.on('SIGINT', saveAndExit);
         process.on('SIGTERM', saveAndExit);
@@ -112,6 +121,15 @@ class Database extends EventEmitter {
             this.saveDB();
             process.exit(1);
         });
+    }
+
+    GetAllcollections() {
+        const allDocuments = Object.entries(this.data.collections)
+            .map(([id, data]) => ({ id, ...data }));
+            // .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+            
+
+        return allDocuments.slice(0, Object.keys(this.data).length);
     }
 
     collection(name) {
@@ -278,6 +296,14 @@ class Collection {
             .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
 
         return allDocuments.slice(startIndex, startIndex + pageSize);
+    }
+
+    GetAllDocuments() {
+        const allDocuments = Object.entries(this.data)
+            .map(([id, data]) => ({ id, ...data }))
+            .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+
+        return allDocuments.slice(0, Object.keys(this.data).length);
     }
 
     saveFile(documentId, fieldName, fileBuffer, fileName) {
