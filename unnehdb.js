@@ -5,8 +5,9 @@ const { v4: uuidv4 } = require("uuid");
 const EventEmitter = require('events');
 const { warn } = require("console");
 const { Worker, isMainThread, parentPort, workerData } = require('worker_threads');
+const { BSON, EJSON } = require('bson');
 
-// const DB_FILE = path.join(__dirname, "database.json");
+// const DB_FILE = path.join(__dirname, "database.unnehDB");
 let UPLOAD_DIR = path.join(__dirname, "uploads"); // Default upload directory
 
 class Database extends EventEmitter {
@@ -19,16 +20,16 @@ class Database extends EventEmitter {
 
         if (isPath) {
             if (actuallname !== "") {
-                this.DB_FILE = path.join(databaseFile, actuallname + ".json");
+                this.DB_FILE = path.join(databaseFile, actuallname + ".unnehDB");
             } else {
-                this.DB_FILE = databaseFile + ".unnehdatabase.json";
+                this.DB_FILE = databaseFile + ".unnehdatabase.unnehDB";
 
             }
             // console.log('Database file path set to:', databaseFile);
         } else {
-            this.DB_FILE = path.join(__dirname, databaseFile + ".json");
+            this.DB_FILE = path.join(__dirname, databaseFile + ".unnehDB");
             if (actuallname !== "") {
-                // this.DB_FILE = path.join(__dirname, actuallname+".json");
+                // this.DB_FILE = path.join(__dirname, actuallname+".unnehDB");
                 warn("Actuall name is not used in this case as the name for file is databaseFile! Only use this if you selected specific path for it!");
             }
         }
@@ -42,21 +43,23 @@ class Database extends EventEmitter {
     }
     // init the database create file!
     initDB() {
-        console.log('Waiting for db.');
+        // console.log('Waiting for db.');
 
         if (!fs.existsSync(this.DB_FILE)) {
             console.log("!fileexist");
             this.data = { collections: {}, indexes: {}, files: {} };
             this.saveDB();
         } else {
-            this.data = JSON.parse(fs.readFileSync(this.DB_FILE));
+            // this.data = JSON.parse(fs.readFileSync(this.DB_FILE));
+            this.data = BSON.deserialize(fs.readFileSync(this.DB_FILE));
+            // EJSON.parse(this.data);
             const workerPath = path.join(__dirname, 'dbWorker.js');
             // this.data = fs.readFileSync(this.DB_FILE);
             const worker = new Worker(workerPath, { workerData: { file: this.DB_FILE } });
 
             worker.on('message', (data) => {
                 this.data = data;
-                console.log('Database initialized.' + data);
+                // console.log('Database initialized.' + data);
             });
             worker.on('error', (err) => {
                 console.error('Worker error:', err);
@@ -159,7 +162,7 @@ class Collection {
         // console.log(`Initialized collection '${name}'.`);
     }
 
-   
+
     getDocumentByIndexAsync(data, index) {
         return new Promise((resolve, reject) => {
             const worker = new Worker('./worker.js', { workerData: { data, index } });
@@ -172,11 +175,11 @@ class Collection {
     }
     getDocumentByIndex(index) {
         const collectionData = this.data;
-        console.log(collectionData);
+        // console.log(collectionData);
         const keys = Object.keys(collectionData);
-        console.log(keys);
+        // console.log(keys);
         const key = keys[index];
-        console.log(key);
+        // console.log(key);
         return { id: key, document: this.data[key] };
     }
 
@@ -237,11 +240,24 @@ class Collection {
 
     delete(documentId) {
         if (!this.data[documentId]) {
-            // console.log(`Document ${documentId} does not exist.`);
+            console.warn(`Document ${documentId} does not exist.`);
             return false;
         }
 
-        delete this.data[documentId];
+        // console.log(`Deleting document ${documentId}`);
+        const keys = Object.keys(this.data);
+        const index = keys.indexOf(documentId);
+        if (index > -1) {
+            const newData = Object.fromEntries(keys.slice(0, index).concat(keys.slice(index + 1)).map(key => [key, this.data[key]]));
+            this.data = newData;
+        }
+
+        // Verify if the document is removed from this.data
+        if (this.data.hasOwnProperty(documentId)) {
+            console.warn(`Failed to delete document ${documentId} from memory.`);
+            return false;
+        }
+
         // this.removeFromIndexes(documentId);
         // this.db.saveDB();
         // console.log(`Deleted document ${documentId} from collection '${this.name}'.`);
@@ -322,5 +338,5 @@ if (require.main === module) {
     process.exit(1);
 }
 
-// const Db = new Database("unnehdb.json");
+// const Db = new Database("unnehdb.unnehDB");
 module.exports = Database;
