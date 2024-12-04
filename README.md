@@ -84,6 +84,13 @@ The `add` method returns a unique ID for the document, and the argument is the d
 To retrieve a document by its ID:
 
 ```javascript
+const user = users.getDocumentByIndex(userId);
+```
+
+---
+To retrieve a document by its it Index:
+
+```javascript
 const user = users.getDocumentById(userId);
 ```
 
@@ -145,6 +152,9 @@ users.saveFile(documentId, 'profilePicture', fileBuffer, 'profile.jpg');
 - The fourth argument is the file name.
 
 ---
+### Deleting a File
+todo : add the removing file function
+---
 
 ## Shortcuts and Notes
 
@@ -155,8 +165,46 @@ users.saveFile(documentId, 'profilePicture', fileBuffer, 'profile.jpg');
 ---
 
 ### License
-
+GPL
 ---
 My first project like this wooho! by 177unneh
 <!-- `unnehdb.js` is open-source and available under the MIT License. -->
 
+# CODE EXAMPLES
+### Creating users info
+```javascript
+const Database = require('unnehdb');
+const db = new Database('Users_database'); //We are creating the new database with name Users_database.
+// It will create a file in this example in the root directiory.
+// You can specyfy it path and autosave time by doing this
+// const db = new Database('Users_database',50,PATH_DATA); 
+
+// 50 = time in milisecounds
+// PATH_DATA = a folder where to create the db
+// Users_database = name of the db
+
+const Users = db.collection('users'); // We are making a collection of users
+function useradd(email,username,password){
+  let DocumentId = Users.add({name:username,email:email,pass:password})
+   // creating a document of user and returning it random document id (you can call it a user id)
+}
+```
+
+### Creating users info from already set userid
+```javascript
+const Database = require('unnehdb');
+const db = new Database('Users_database'); //We are creating the new database with name Users_database.
+// It will create a file in this example in the root directiory.
+// You can specyfy it path and autosave time by doing this
+// const db = new Database('Users_database',50,PATH_DATA); 
+
+// 50 = time in milisecounds
+// PATH_DATA = a folder where to create the db
+// Users_database = name of the db
+
+const Users = db.collection('users'); // We are making a collection of users
+function useradd(email,username,password,USERID){
+  let DocumentId = Users.add({name:username,email:email,pass:password},USERID)
+   // creating a document of user and returning it random document id (you can call it a user id)
+}
+```

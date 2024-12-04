@@ -4,34 +4,35 @@ const crypto = require("crypto");
 const { v4: uuidv4 } = require("uuid");
 const EventEmitter = require('events');
 const { warn } = require("console");
-const { Worker } = require('worker_threads');
+const { Worker, isMainThread, parentPort, workerData } = require('worker_threads');
 
 // const DB_FILE = path.join(__dirname, "database.json");
 let UPLOAD_DIR = path.join(__dirname, "uploads"); // Default upload directory
 
 class Database extends EventEmitter {
     constructor(databaseFile = "database", autosaveInterval = 60000, actuallname = "") {
+        // this.data = fs.readFileSync(this.DB_FILE);
+
         super();
 
         const isPath = databaseFile.includes('/') || databaseFile.includes('\\');
 
         if (isPath) {
             if (actuallname !== "") {
-                this.DB_FILE = path.join(databaseFile, actuallname+".json");
+                this.DB_FILE = path.join(databaseFile, actuallname + ".json");
             } else {
-                 this.DB_FILE = databaseFile+".unnehdatabase.json";
+                this.DB_FILE = databaseFile + ".unnehdatabase.json";
 
             }
             // console.log('Database file path set to:', databaseFile);
         } else {
-            this.DB_FILE = path.join(__dirname, databaseFile+".json");
-            if(actuallname !== ""){
+            this.DB_FILE = path.join(__dirname, databaseFile + ".json");
+            if (actuallname !== "") {
                 // this.DB_FILE = path.join(__dirname, actuallname+".json");
                 warn("Actuall name is not used in this case as the name for file is databaseFile! Only use this if you selected specific path for it!");
             }
         }
 
-        
         console.log('Database file path set to:', this.DB_FILE);
 
         this.autosaveInterval = autosaveInterval; // Auto-save interval in milliseconds
@@ -49,32 +50,30 @@ class Database extends EventEmitter {
             this.saveDB();
         } else {
             this.data = JSON.parse(fs.readFileSync(this.DB_FILE));
-            console.log("fileexist");
+            const workerPath = path.join(__dirname, 'dbWorker.js');
+            // this.data = fs.readFileSync(this.DB_FILE);
+            const worker = new Worker(workerPath, { workerData: { file: this.DB_FILE } });
 
-            // const workerPath = path.join(__dirname, 'dbWorker.js'); // Updated path
-            // const worker = new Worker(workerPath, { workerData: { file: this.DB_FILE } });
-            // worker.on('message', (data) => {
-            //     this.data = data;
-            //     console.log('Database initialized.');
-            // });
-            // worker.on('error', (err) => { // Added error handling
-            //     console.error('Worker error:', err);
-            // });
+            worker.on('message', (data) => {
+                this.data = data;
+                console.log('Database initialized.' + data);
+            });
+            worker.on('error', (err) => {
+                console.error('Worker error:', err);
+            });
         }
         console.log('Database initialized.');
     }
     //function to save it
     saveDB() {
-        fs.writeFileSync(this.DB_FILE, JSON.stringify(this.data, null, 2));
-        console.log('Database saved to disk.');
-        // const workerPath = path.join(__dirname, 'dbWorker.js'); // Updated path
-        // const worker = new Worker(workerPath, { workerData: { file: this.DB_FILE, data: this.data } });
-        // worker.on('message', () => {
-        //     console.log('Database saved to disk.');
-        // });
-        // worker.on('error', (err) => { // Added error handling
-        //     console.error('Worker error:', err);
-        // });
+        const workerPath = path.join(__dirname, 'dbWorker.js');
+        const worker = new Worker(workerPath, { workerData: { file: this.DB_FILE, data: this.data } });
+        worker.on('message', () => {
+            console.log('Database saved to disk.');
+        });
+        worker.on('error', (err) => {
+            console.error('Worker error:', err);
+        });
     }
 
     startAutoSave() {
@@ -98,7 +97,7 @@ class Database extends EventEmitter {
 
         process.on('SIGINT', saveAndExit);
         process.on('SIGTERM', saveAndExit);
-        
+
         process.on('uncaughtException', (err) => {
             console.error('Uncaught exception:', err);
             this.saveDB();
@@ -116,7 +115,9 @@ class Database extends EventEmitter {
         if (!this.data.collections[name]) {
             this.data.collections[name] = {};
             this.data.indexes[name] = {};
-            console.log(`Collection '${name}' created.`);
+            // console.log(`Collection '${name}' created.`);
+        } else {
+            // console.log(`Collection '${name}' already exists.`);
         }
         return new Collection(name, this.data, this);
     }
@@ -125,9 +126,9 @@ class Database extends EventEmitter {
         if (this.data.collections[name]) {
             delete this.data.collections[name];
             delete this.data.indexes[name];
-            console.log(`Collection '${name}' deleted.`);
+            // console.log(`Collection '${name}' deleted.`);
         } else {
-            console.log(`Collection '${name}' does not exist.`);
+            // console.log(`Collection '${name}' does not exist.`);
         }
     }
 
@@ -136,7 +137,7 @@ class Database extends EventEmitter {
         if (!fs.existsSync(UPLOAD_DIR)) {
             fs.mkdirSync(UPLOAD_DIR);
         }
-        console.log(`Ścieżka zapisu plików ustawiona na: ${UPLOAD_DIR}`);
+        // console.log(`Ścieżka zapisu plików ustawiona na: ${UPLOAD_DIR}`);
     }
 }
 
@@ -155,32 +156,45 @@ class Collection {
             this.files = {};
         }
         this.db = db;
-        console.log(`Initialized collection '${name}'.`);
+        // console.log(`Initialized collection '${name}'.`);
     }
 
    
+    getDocumentByIndexAsync(data, index) {
+        return new Promise((resolve, reject) => {
+            const worker = new Worker('./worker.js', { workerData: { data, index } });
+            worker.on('message', resolve);
+            worker.on('error', reject);
+            worker.on('exit', (code) => {
+                if (code !== 0) reject(new Error(`Worker stopped with exit code ${code}`));
+            });
+        });
+    }
     getDocumentByIndex(index) {
         const collectionData = this.data;
+        console.log(collectionData);
         const keys = Object.keys(collectionData);
+        console.log(keys);
         const key = keys[index];
+        console.log(key);
         return { id: key, document: this.data[key] };
     }
 
-    add(documentData) {
-        const documentId = uuidv4();
+    add(documentData, documentIds = uuidv4()) {
+        const documentId = documentIds;
         const timestamp = new Date().toISOString();
 
         this.data[documentId] = { ...documentData, createdAt: timestamp, collections: {} };
         // this.updateIndexes(documentId, documentData);
         // this.db.saveDB();
-        console.log(`Added document ${documentId} to collection '${this.name}'.`);
+        // console.log(`Added document ${documentId} to collection '${this.name}'.`);
         return documentId;
     }
 
     collection(documentId, subCollectionName) {
         const document = this.data[documentId] || null;
         if (!document) {
-            console.log(`Document ${documentId} does not exist.`);
+            // console.log(`Document ${documentId} does not exist.`);
             return null;
         }
 
@@ -196,29 +210,41 @@ class Collection {
         return this.data[id] || null;
     }
 
+    // getDocumentByIdAsync(id) { // not workig shit
+    //     let data = this.data;
+    //     return new Promise((resolve, reject) => {
+    //         const worker = new Worker('./workerid.js', { workerData: { data, id } });
+    //         worker.on('message', resolve);
+    //         worker.on('error', reject);
+    //         worker.on('exit', (code) => {
+    //             if (code !== 0) reject(new Error(`Worker stopped with exit code ${code}`));
+    //         });
+    //     });
+    // }
+
     update(documentId, updates) {
         if (!this.data[documentId]) {
-            console.log(`Document ${documentId} does not exist.`);
+            // console.log(`Document ${documentId} does not exist.`);
             return false;
         }
 
         Object.assign(this.data[documentId], updates);
         // this.updateIndexes(documentId, this.data[documentId]);
-        this.db.saveDB();
-        console.log(`Updated document ${documentId} in collection '${this.name}'.`);
+        // this.db.saveDB();
+        // console.log(`Updated document ${documentId} in collection '${this.name}'.`);
         return true;
     }
 
     delete(documentId) {
         if (!this.data[documentId]) {
-            console.log(`Document ${documentId} does not exist.`);
+            // console.log(`Document ${documentId} does not exist.`);
             return false;
         }
 
         delete this.data[documentId];
         // this.removeFromIndexes(documentId);
-        this.db.saveDB();
-        console.log(`Deleted document ${documentId} from collection '${this.name}'.`);
+        // this.db.saveDB();
+        // console.log(`Deleted document ${documentId} from collection '${this.name}'.`);
         return true;
     }
 
@@ -245,13 +271,13 @@ class Collection {
         if (!this.files[fileHash]) {
             fs.writeFileSync(filePath, fileBuffer);
             this.files[fileHash] = filePath;
-            console.log(`file saved as ${filePath}.`);
+            // console.log(`file saved as ${filePath}.`);
         } else {
-            console.log(`File exist as: ${filePath}.`);
+            // console.log(`File exist as: ${filePath}.`);
         }
 
         if (!this.data[documentId]) {
-            console.log(`Document ${documentId} does not exist.`);
+            // console.log(`Document ${documentId} does not exist.`);
             return null;
         }
         this.data[documentId][fieldName] = filePath;
@@ -263,16 +289,16 @@ class Collection {
     findAndUpdate(documentId, updates) {
         const document = this.find(documentId);
         if (!document) {
-            console.log(`Document ${documentId} does not exist.`);
+            // console.log(`Document ${documentId} does not exist.`);
             return false;
         }
 
         this.update(documentId, updates);
-        console.log(`Document ${documentId} updated.`);
+        // console.log(`Document ${documentId} updated.`);
         return true;
     }
 
-  
+
 }
 
 class SubCollection extends Collection {
@@ -292,7 +318,7 @@ class SubCollection extends Collection {
 }
 
 if (require.main === module) {
-    console.log("Ten plik nie jest przeznaczony do bezpośredniego uruchamiania. Użyj go w swojej aplikacji.");
+    console.log("This file is not use as standalone code!");
     process.exit(1);
 }
 
