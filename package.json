@@ -16,6 +16,7 @@
   "author": "177unneh",
   "license": "GPL",
   "dependencies": {
+    "bson": "^6.10.1",
     "console": "^0.7.2",
     "events": "^3.3.0",
     "uuid": "^11.0.3"
