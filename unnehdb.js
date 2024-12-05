@@ -261,26 +261,23 @@ class Collection {
             console.warn(`Document ${documentId} does not exist.`);
             return false;
         }
-
-        // console.log(`Deleting document ${documentId}`);
-        const keys = Object.keys(this.data);
-        const index = keys.indexOf(documentId);
-        if (index > -1) {
-            const newData = Object.fromEntries(keys.slice(0, index).concat(keys.slice(index + 1)).map(key => [key, this.data[key]]));
-            this.data = newData;
-        }
-
-        // Verify if the document is removed from this.data
+    
+        // Usuwanie dokumentu
+        delete this.data[documentId];
+    
+        // Weryfikacja, czy dokument został usunięty
         if (this.data.hasOwnProperty(documentId)) {
             console.warn(`Failed to delete document ${documentId} from memory.`);
             return false;
         }
-
+    
+        // Optionalne operacje
         // this.removeFromIndexes(documentId);
         // this.db.saveDB();
         // console.log(`Deleted document ${documentId} from collection '${this.name}'.`);
         return true;
     }
+    
 
     count() {
         return Object.keys(this.data).length;
